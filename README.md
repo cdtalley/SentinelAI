@@ -311,17 +311,23 @@ Environment:
 - `SENTINEL_API_BASE` — default `http://127.0.0.1:8000/api/v1`
 - `SENTINEL_API_KEY` — when the API runs with `AUTH_MODE=api_key`
 
-**Upwork / marketing asset:** a full-page capture is stored at **`docs/screenshots/upwork-dashboard.png`**. For a shot that shows **live metrics, charts, and scored rows**, seed the API first (requires Postgres + loaded models):
+**Upwork / marketing assets** live under **`docs/screenshots/`**:
+
+| File | What it is |
+|------|------------|
+| **`upwork-dashboard.png`** | Full-page Streamlit ops dashboard (charts + audit trail). |
+| **`next-console-dashboard.png`** | Next.js `/dashboard` (when capture script finds a dev server). |
+
+**Recommended (one command)** — waits for API health, seeds live `/predict` traffic, starts Streamlit headlessly, captures **1920×** PNGs:
 
 ```bash
-docker compose up -d   # or your usual API + DB stack
-pip install playwright && python -m playwright install chromium
-streamlit run dashboard/app.py --server.port 8501 --server.address 127.0.0.1 --server.headless true
-# second shell, after Streamlit responds on 8501:
-python scripts/capture_dashboard_screenshot.py --url http://127.0.0.1:8501 --wait-ms 15000 --seed-first
+docker compose up -d --build   # Postgres + API (+ optional console)
+pip install -r requirements.txt
+python -m playwright install chromium
+python scripts/capture_portfolio_assets.py --with-docker --wait-ready 600
 ```
 
-`--seed-first` runs **`scripts/seed_demo_traffic.py`** against the live API so metrics, charts, and the **Recent audit trail** table show real scored rows. You can also run `python scripts/seed_demo_traffic.py` manually once, then capture without the flag. Optional `--out` path; default writes `docs/screenshots/upwork-dashboard.png`.
+For a manual flow, use **`scripts/capture_dashboard_screenshot.py`** with **`--seed-first`**, or run **`python scripts/seed_demo_traffic.py`** once before opening Streamlit. Optional `--out` on the legacy capture script; portfolio script writes fixed paths under `docs/screenshots/`.
 
 ### 14.1 Next.js catalog console (portfolio / Upwork)
 

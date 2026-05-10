@@ -18,5 +18,6 @@ COPY scripts ./scripts
 RUN chmod +x scripts/docker-entrypoint.sh
 
 EXPOSE 8000
-ENTRYPOINT ["scripts/docker-entrypoint.sh"]
+# Use /bin/sh explicitly so CRLF or missing +x on bind mounts cannot break startup.
+ENTRYPOINT ["/bin/sh", "scripts/docker-entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

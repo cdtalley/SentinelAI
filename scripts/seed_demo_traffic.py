@@ -90,6 +90,7 @@ def main() -> int:
     url = f"{args.base}/predict"
     ok = 0
     fail = 0
+    decisions: dict[str, int] = {}
     with httpx.Client(timeout=120.0) as client:
         for i in range(max(1, args.count)):
             amt, t, extra = templates[i % len(templates)]
@@ -99,9 +100,11 @@ def main() -> int:
                 r = client.post(url, json=body, headers=headers)
                 if r.status_code == 200:
                     ok += 1
-                    dec = r.json().get("decision", "?")
-                    p = r.json().get("fraud_probability", 0)
-                    print(f"  OK {dec} p={float(p):.3f} amt={amt}")
+                    data = r.json()
+                    dec = str(data.get("decision", "?"))
+                    decisions[dec] = decisions.get(dec, 0) + 1
+                    p = float(data.get("fraud_probability", 0))
+                    print(f"  OK {dec} p={p:.3f} amt={amt}")
                 elif r.status_code == 409:
                     print("  skip duplicate (unexpected uuid clash)")
                 else:
@@ -112,7 +115,9 @@ def main() -> int:
                 print(f"  ERROR {e}", file=sys.stderr)
             time.sleep(0.05)
 
-    print(f"\nDone: {ok} scored, {fail} failures. Open Streamlit dashboard or capture screenshot.")
+    mix = ", ".join(f"{k}={v}" for k, v in sorted(decisions.items())) or "none"
+    print(f"\nDone: {ok} scored ({mix}), {fail} failures.")
+    print("Open Streamlit or run: python scripts/capture_portfolio_assets.py")
     return 0 if fail == 0 else 1
 
 

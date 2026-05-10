@@ -18,7 +18,8 @@ services:
   api:
     build: .
     ports:
-      - "8000:8000"
+      # If another stack uses 8000: SENTINEL_HOST_PORT=8001 docker compose up -d
+      - "${SENTINEL_HOST_PORT:-8000}:8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://sentinel:sentinel@postgres:5432/sentinelai
       SYNC_DATABASE_URL: postgresql://sentinel:sentinel@postgres:5432/sentinelai

@@ -78,25 +78,74 @@ def main() -> None:
     st.markdown(
         """
         <style>
-        .block-container { padding-top: 1.2rem; }
-        div[data-testid="stMetricValue"] { font-size: 1.75rem; font-weight: 600; }
-        .hero {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0c4a6e 100%);
-            padding: 1.75rem 2rem;
-            border-radius: 12px;
+        .stApp { background: linear-gradient(165deg, #020617 0%, #0f172a 42%, #082f49 100%) !important; }
+        .block-container { padding-top: 1.1rem; max-width: 1480px; }
+        div[data-testid="stMetricValue"] { font-size: 1.65rem; font-weight: 700; letter-spacing: -0.02em; }
+        div[data-testid="stMetricLabel"] { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; }
+        .hero-wrap {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            padding: 1.6rem 2rem 1.5rem 2rem;
             margin-bottom: 1.25rem;
-            border: 1px solid #334155;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            background: linear-gradient(125deg, rgba(15,23,42,0.95) 0%, rgba(8,47,73,0.55) 100%);
+            box-shadow: 0 24px 48px -20px rgba(0,0,0,0.55);
         }
-        .hero h1 { color: #f8fafc; margin: 0; font-size: 1.85rem; letter-spacing: -0.02em; }
-        .hero p { color: #94a3b8; margin: 0.5rem 0 0 0; font-size: 1rem; }
+        .hero-wrap::before {
+            content: "";
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse 70% 55% at 20% -10%, rgba(34,211,238,0.22), transparent 55%);
+            pointer-events: none;
+        }
+        .hero-wrap h1 {
+            position: relative;
+            color: #f8fafc;
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+        }
+        .hero-wrap .tagline {
+            position: relative;
+            color: #94a3b8;
+            margin: 0.55rem 0 0 0;
+            font-size: 1.05rem;
+            line-height: 1.45;
+            max-width: 52rem;
+        }
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            border: 1px solid rgba(34,211,238,0.35);
+            color: #a5f3fc;
+            background: rgba(34,211,238,0.1);
+            margin-bottom: 0.75rem;
+        }
+        .pill-dot { width: 7px; height: 7px; border-radius: 999px; background: #22d3ee; box-shadow: 0 0 12px #22d3ee; }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
+    health = fetch_health()
+    live = bool(health and health.get("model_loaded") and health.get("db_connected"))
+    pill = (
+        '<span class="pill"><span class="pill-dot"></span>Live API</span>'
+        if live
+        else '<span class="pill"><span class="pill-dot" style="background:#fbbf24;box-shadow:none"></span>Degraded</span>'
+    )
     st.markdown(
-        '<div class="hero"><h1>SentinelAI</h1>'
-        "<p>Real-time fraud scoring · SHAP explainability · PSI drift · PostgreSQL audit trail</p></div>",
+        f'<div class="hero-wrap">{pill}<h1>SentinelAI — Fraud operations</h1>'
+        "<p class='tagline'>Real-time scoring plane · SHAP drivers · rolling KPIs · "
+        "PostgreSQL audit trail — portfolio surface for AI / ML engineering roles.</p></div>",
         unsafe_allow_html=True,
     )
 
@@ -106,10 +155,10 @@ def main() -> None:
         st.divider()
         st.caption("Optional env: `SENTINEL_API_KEY` when the API uses API-key auth.")
 
-    health = fetch_health()
     metrics = fetch_metrics()
+    audit_preview = fetch_transactions(50, None)
 
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4, c5 = st.columns(5)
     with c1:
         ok = health and health.get("model_loaded")
         st.metric("Model", "Loaded" if ok else "Offline", delta=None)
@@ -122,6 +171,8 @@ def main() -> None:
     with c4:
         lat = (metrics or {}).get("avg_processing_time_ms")
         st.metric("Avg latency (window)", f"{lat:.1f} ms" if lat is not None else "—")
+    with c5:
+        st.metric("Audit rows (loaded)", f"{len(audit_preview):,}")
 
     left, right = st.columns(2)
 
@@ -186,7 +237,7 @@ def main() -> None:
             )
 
     st.subheader("Recent audit trail (latest scores)")
-    audit = fetch_transactions(50, None)
+    audit = audit_preview
     if audit:
         adf = pd.DataFrame(audit)[
             [

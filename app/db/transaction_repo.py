@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.db_models import TransactionLog
@@ -46,7 +47,14 @@ class TransactionRepository:
             predicted_at=result.predicted_at,
         )
         db.add(row)
-        await db.commit()
+        try:
+            await db.commit()
+        except IntegrityError:
+            await db.rollback()
+            raise
+        except Exception:
+            await db.rollback()
+            raise
 
     async def get_by_transaction_id(
         self, db: AsyncSession, transaction_id: str

@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: sentinelai
+      POSTGRES_USER: sentinel
+      POSTGRES_PASSWORD: sentinel
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel -d sentinelai"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://sentinel:sentinel@postgres:5432/sentinelai
+      SYNC_DATABASE_URL: postgresql://sentinel:sentinel@postgres:5432/sentinelai
+      DATABASE_SCHEMA_MANAGED_BY: alembic
+      AUTH_MODE: none
+      RATE_LIMIT_ENABLED: "false"
+      CORS_ORIGINS: "*"
+      APP_ENV: staging
+      EXPOSE_ERROR_DETAILS: "false"
+      LOG_JSON: "true"
+    volumes:
+      - ./app/models/ml:/app/app/models/ml:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

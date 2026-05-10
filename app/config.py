@@ -1,6 +1,7 @@
 """Application configuration via pydantic-settings."""
 
 from functools import lru_cache
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -44,6 +45,29 @@ class Settings(BaseSettings):
     ISO_SCORE_MIN: float = -0.5
     ISO_SCORE_MAX: float = 0.1
 
+    # Operations (production: narrow CORS, disable error detail leakage)
+    APP_ENV: str = "development"
+    """development | staging | production"""
+    EXPOSE_ERROR_DETAILS: bool = False
+    """If True, 500 responses may include exception text (never enable in production)."""
+    CORS_ORIGINS: str = "*"
+    """Comma-separated origins, or * for allow-all (development only)."""
+
+    DB_POOL_SIZE: int = 5
+    DB_MAX_OVERFLOW: int = 10
+
+    # --- Production modules (swap backends without touching business logic) ---
+    AUTH_MODE: Literal["none", "api_key"] = "none"
+    API_KEYS: str = ""
+    """Comma-separated secrets when AUTH_MODE=api_key (rotate via env / secrets manager)."""
+
+    RATE_LIMIT_ENABLED: bool = False
+    """Enable SlowAPI process-local limits (turn on behind your gateway in production)."""
+    LOG_JSON: bool = False
+    LOG_LEVEL: str = "INFO"
+
+    DATABASE_SCHEMA_MANAGED_BY: Literal["app", "alembic"] = "app"
+    """``app``: SQLAlchemy create_all on startup. ``alembic``: run ``alembic upgrade head`` in deploy (init_db no-op)."""
 
 @lru_cache
 def get_settings() -> Settings:

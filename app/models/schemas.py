@@ -98,7 +98,11 @@ class BatchPredictionResponse(BaseModel):
     """Batch scoring response."""
 
     results: list[PredictionWithExplanation]
-    total: int
+    total: int = Field(description="Rows in the request body.")
+    skipped_duplicates: int = Field(
+        default=0,
+        description="Rows omitted from results because transaction_id already existed.",
+    )
     blocked_count: int
     review_count: int
     approved_count: int

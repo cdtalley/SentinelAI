@@ -72,6 +72,25 @@ def wire_application(
         _transaction_repo = txn_repo
 
 
+def clear_application_wiring() -> None:
+    """Reset singleton pointers (mostly for tests)."""
+    global IS_MODEL_READY, _settings_instance, _ollama_client, _model_loader
+    global _feature_service, _prediction_service, _explanation_service
+    global _alert_service, _performance_tracker, _drift_detector, _transaction_repo
+
+    IS_MODEL_READY = False
+    _settings_instance = None
+    _ollama_client = None
+    _model_loader = None
+    _feature_service = None
+    _prediction_service = None
+    _explanation_service = None
+    _alert_service = None
+    _performance_tracker = None
+    _drift_detector = None
+    _transaction_repo = None
+
+
 def get_settings_sync() -> Settings:
     """Depends() provider for pydantic-settings."""
     if _settings_instance is not None:
@@ -150,3 +169,23 @@ def get_transaction_repo() -> TransactionRepository:
 
 
 get_db = _database_get_db
+
+
+def peek_ollama_client() -> OllamaClient | None:
+    """Synchronous accessor for websocket / telemetry without HTTP semantics."""
+    return _ollama_client
+
+
+def peek_model_loader() -> ModelLoader | None:
+    """Non-raising model loader accessor for readiness checks."""
+    return _model_loader
+
+
+def peek_is_model_ready() -> bool:
+    return IS_MODEL_READY
+
+
+def require_alert_service_sync() -> AlertService:
+    if _alert_service is None:
+        raise RuntimeError("AlertService wired after startup")
+    return _alert_service

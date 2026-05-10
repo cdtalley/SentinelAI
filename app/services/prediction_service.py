@@ -69,7 +69,7 @@ class PredictionService:
             fraud_probability = float(probs[1])
             model_used = "xgboost"
             shap_row = self._explain_xgb_row(features)
-            pairs = list(zip(names, shap_row, strict=False))
+            pairs = list(zip(names, shap_row, strict=True))
             pairs_sorted = sorted(pairs, key=lambda x: abs(x[1]), reverse=True)[
                 : self._settings.TOP_K_SHAP_FEATURES
             ]

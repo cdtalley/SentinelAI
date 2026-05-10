@@ -17,6 +17,8 @@ engine = create_async_engine(
     _settings.DATABASE_URL,
     pool_pre_ping=True,
     echo=False,
+    pool_size=_settings.DB_POOL_SIZE,
+    max_overflow=_settings.DB_MAX_OVERFLOW,
 )
 async_session_factory = async_sessionmaker(
     engine,
@@ -39,8 +41,12 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db() -> None:
-    """Create ORM tables if missing."""
+    """Create ORM tables when schema is managed by the app (not Alembic)."""
+    from app.config import get_settings
     from app.models.db_models import Base
+
+    if get_settings().DATABASE_SCHEMA_MANAGED_BY == "alembic":
+        return
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

@@ -315,7 +315,8 @@ Environment:
 
 | File | What it is |
 |------|------------|
-| **`upwork-thumbnail.png`** | **1200×630** Upwork / catalog hero (readable as a small thumbnail). |
+| **`upwork-thumbnail.png`** | **1200×630** v2 — high-contrast catalog hero (default for listings). |
+| **`upwork-thumbnail-v1.png`** | **1200×630** v1 — classic gradient + stat tiles (reproducible from script). |
 | **`upwork-dashboard.png`** | Full-page Streamlit ops dashboard (charts + audit trail). |
 | **`next-console-dashboard.png`** | Next.js `/dashboard` (when capture script finds a dev server). |
 

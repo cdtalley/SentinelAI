@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Radio } from "lucide-react";
+import { Radio, Zap } from "lucide-react";
 import { getWsAlertsUrl } from "@/lib/config";
 import { cn } from "@/lib/utils";
 
@@ -69,58 +69,90 @@ export function AlertFeed() {
   }, []);
 
   return (
-    <div className="rounded-xl border border-white/8 bg-canvas-elevated/60 shadow-panel">
-      <div className="flex items-center justify-between border-b border-white/8 px-4 py-3">
-        <div className="flex items-center gap-2 text-sm font-medium text-white">
-          <Radio className="h-4 w-4 text-accent" />
-          Live alerts
+    <div className="flex h-full min-h-[320px] flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-gradient-to-b from-white/[0.04] to-transparent shadow-panel">
+      <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3.5 sm:px-5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-accent/20 bg-accent/10">
+            <Zap className="h-4 w-4 text-accent" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-white">Incident stream</p>
+            <p className="font-mono text-[10px] uppercase tracking-wider text-ink-faint">
+              WebSocket · /api/v1/ws/alerts
+            </p>
+          </div>
         </div>
         <span
           className={cn(
-            "font-mono text-xs",
-            status === "open" && "text-risk-ok",
-            status === "connecting" && "text-risk-review",
-            status === "error" && "text-risk-block",
-            status === "idle" && "text-ink-faint"
+            "rounded-full border px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider",
+            status === "open" &&
+              "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+            status === "connecting" &&
+              "border-amber-500/30 bg-amber-500/10 text-amber-200",
+            status === "error" && "border-rose-500/30 bg-rose-500/10 text-rose-200",
+            status === "idle" && "border-white/10 text-ink-faint"
           )}
         >
+          <Radio className="mr-1 inline h-3 w-3" />
           {status === "open"
-            ? "STREAM"
+            ? "Live"
             : status === "connecting"
-              ? "CONNECTING"
+              ? "Linking"
               : status === "error"
-                ? "WS ERROR"
-                : "OFFLINE"}
+                ? "Error"
+                : "Idle"}
         </span>
       </div>
-      <div className="max-h-[280px] space-y-2 overflow-y-auto p-3">
+      <div className="flex-1 space-y-2 overflow-y-auto p-3 sm:p-4">
         {alerts.length === 0 ? (
-          <p className="py-6 text-center text-xs text-ink-muted">
-            Waiting for BLOCKED / REVIEW decisions…
-          </p>
+          <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 px-4 text-center">
+            <p className="text-xs text-ink-muted">
+              Listening for <span className="text-risk-block">BLOCKED</span> and{" "}
+              <span className="text-risk-review">REVIEW</span> decisions. Score a
+              high-risk transaction in the sandbox to populate this feed for your
+              demo recording.
+            </p>
+          </div>
         ) : (
           alerts.map((a, i) => (
             <div
               key={`${a.transaction_id}-${a.timestamp}-${i}`}
-              className="rounded-lg border border-white/6 bg-canvas/80 px-3 py-2 text-xs"
+              className={cn(
+                "rounded-xl border border-white/[0.06] bg-canvas/60 px-3.5 py-3 text-xs backdrop-blur-sm",
+                "border-l-[3px]",
+                a.decision === "BLOCKED" && "border-l-rose-400",
+                a.decision === "REVIEW" && "border-l-amber-400",
+                !a.decision && "border-l-slate-500"
+              )}
             >
               <div className="flex justify-between gap-2">
-                <span className="font-mono text-accent">
-                  {a.transaction_id?.slice(0, 12)}…
+                <span className="truncate font-mono text-[11px] text-accent">
+                  {a.transaction_id}
                 </span>
                 <span
                   className={cn(
-                    "shrink-0 font-medium",
-                    a.decision === "BLOCKED" && "text-risk-block",
-                    a.decision === "REVIEW" && "text-risk-review"
+                    "shrink-0 font-mono text-[10px] font-bold uppercase tracking-wide",
+                    a.decision === "BLOCKED" && "text-rose-300",
+                    a.decision === "REVIEW" && "text-amber-200"
                   )}
                 >
                   {a.decision}
                 </span>
               </div>
-              <div className="mt-1 text-ink-muted">
-                ${a.amount?.toFixed(2)} · p={((a.fraud_probability ?? 0) * 100).toFixed(1)}%
-                {a.top_risk_signal ? ` · ${a.top_risk_signal}` : ""}
+              <div className="mt-1.5 text-ink-muted">
+                <span className="tabular-nums text-ink">
+                  ${a.amount?.toFixed(2) ?? "—"}
+                </span>
+                {" · "}
+                <span className="tabular-nums">
+                  p={((a.fraud_probability ?? 0) * 100).toFixed(1)}%
+                </span>
+                {a.top_risk_signal ? (
+                  <>
+                    {" · "}
+                    <span className="text-ink-faint">{a.top_risk_signal}</span>
+                  </>
+                ) : null}
               </div>
             </div>
           ))

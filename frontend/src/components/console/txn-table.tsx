@@ -4,59 +4,77 @@ import { cn } from "@/lib/utils";
 function decisionPill(decision: string) {
   const d = decision.toUpperCase();
   return cn(
-    "inline-flex rounded-md px-2 py-0.5 font-mono text-xs font-medium",
-    d === "BLOCKED" && "bg-risk-block/15 text-risk-block",
-    d === "REVIEW" && "bg-risk-review/15 text-risk-review",
-    d === "APPROVED" && "bg-risk-ok/15 text-risk-ok"
+    "inline-flex rounded-md border px-2 py-0.5 font-mono text-[11px] font-semibold tracking-wide",
+    d === "BLOCKED" &&
+      "border-rose-500/30 bg-rose-500/10 text-rose-200",
+    d === "REVIEW" &&
+      "border-amber-500/30 bg-amber-500/10 text-amber-100",
+    d === "APPROVED" &&
+      "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
   );
 }
 
 export function TxnTable({ rows }: { rows: TransactionRecord[] }) {
   if (rows.length === 0) {
     return (
-      <p className="py-12 text-center text-sm text-ink-muted">
-        No scored transactions yet. Run a prediction from the sandbox below.
-      </p>
+      <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] py-16 text-center">
+        <p className="mx-auto max-w-md text-sm text-ink-muted">
+          No rows returned. Start the API, ensure Postgres is reachable, then run
+          a score from the sandbox — this table reads the same persisted audit trail
+          your production risk team would rely on.
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[640px] text-left text-sm">
-        <thead>
-          <tr className="border-b border-white/8 text-xs uppercase tracking-wider text-ink-faint">
-            <th className="pb-3 pr-4 font-medium">ID</th>
-            <th className="pb-3 pr-4 font-medium">Amount</th>
-            <th className="pb-3 pr-4 font-medium">P(fraud)</th>
-            <th className="pb-3 pr-4 font-medium">Decision</th>
-            <th className="pb-3 pr-4 font-medium">Model</th>
-            <th className="pb-3 font-medium">Predicted</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-white/5">
-          {rows.map((r) => (
-            <tr
-              key={r.transaction_id}
-              className="text-ink transition hover:bg-white/[0.02]"
-            >
-              <td className="max-w-[180px] truncate py-3 pr-4 font-mono text-xs text-accent">
-                {r.transaction_id}
-              </td>
-              <td className="py-3 pr-4 tabular-nums">${r.amount.toFixed(2)}</td>
-              <td className="py-3 pr-4 tabular-nums">
-                {(r.fraud_probability * 100).toFixed(1)}%
-              </td>
-              <td className="py-3 pr-4">
-                <span className={decisionPill(r.decision)}>{r.decision}</span>
-              </td>
-              <td className="py-3 pr-4 text-ink-muted">{r.model_used}</td>
-              <td className="py-3 text-xs text-ink-muted">
-                {new Date(r.predicted_at).toLocaleString()}
-              </td>
+    <div className="overflow-hidden rounded-xl border border-white/[0.06]">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[680px] text-left text-sm">
+          <thead>
+            <tr className="border-b border-white/[0.08] bg-white/[0.03] font-mono text-[10px] uppercase tracking-[0.15em] text-ink-faint">
+              <th className="px-4 py-3.5 font-medium">Transaction</th>
+              <th className="px-4 py-3.5 font-medium">Amount</th>
+              <th className="px-4 py-3.5 font-medium">Risk</th>
+              <th className="px-4 py-3.5 font-medium">Decision</th>
+              <th className="px-4 py-3.5 font-medium">Model</th>
+              <th className="px-4 py-3.5 font-medium">Timestamp</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-white/[0.05]">
+            {rows.map((r) => (
+              <tr
+                key={r.transaction_id}
+                className="text-ink transition-colors hover:bg-white/[0.03]"
+              >
+                <td className="max-w-[200px] truncate px-4 py-3.5 font-mono text-xs text-accent">
+                  {r.transaction_id}
+                </td>
+                <td className="px-4 py-3.5 tabular-nums text-white">
+                  ${r.amount.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </td>
+                <td className="px-4 py-3.5 tabular-nums text-ink-muted">
+                  <span className="text-white">
+                    {(r.fraud_probability * 100).toFixed(1)}%
+                  </span>
+                </td>
+                <td className="px-4 py-3.5">
+                  <span className={decisionPill(r.decision)}>{r.decision}</span>
+                </td>
+                <td className="px-4 py-3.5 font-mono text-xs text-ink-muted">
+                  {r.model_used}
+                </td>
+                <td className="px-4 py-3.5 font-mono text-[11px] text-ink-faint">
+                  {new Date(r.predicted_at).toLocaleString()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

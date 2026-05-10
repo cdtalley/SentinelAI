@@ -35,5 +35,17 @@ services:
       postgres:
         condition: service_healthy
 
+  # Next.js ops console — browser calls API on host :8000 (publish both ports).
+  console:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE: http://localhost:8000
+    ports:
+      - "3010:3000"
+    depends_on:
+      - api
+
 volumes:
   postgres_data:

@@ -20,7 +20,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="flex min-h-screen bg-canvas bg-grid-fade">
+    <div className="flex min-h-screen bg-canvas bg-grid-fade bg-[radial-gradient(ellipse_100%_80%_at_50%_-40%,rgba(34,211,238,0.08),transparent)]">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 border-r border-white/8 bg-canvas-elevated/95 backdrop-blur-xl lg:block">
         <div className="flex h-14 items-center gap-2 border-b border-white/8 px-4 font-mono text-sm text-ink">
           <span className="h-2 w-2 rounded-full bg-accent shadow-glow" />

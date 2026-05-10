@@ -8,19 +8,14 @@ import {
   type PerformanceMetrics,
   type TransactionRecord,
 } from "@/lib/api";
-import { PageHeader } from "./page-header";
+import { DashboardHero } from "./dashboard-hero";
 import { StatCard } from "./stat-card";
 import { DecisionChart } from "./decision-chart";
 import { TxnTable } from "./txn-table";
 import { AlertFeed } from "./alert-feed";
 import { PredictSandbox } from "./predict-sandbox";
-
-function formatUptime(sec: number) {
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
-}
+import { Panel, PanelHeader } from "./panel";
+import { BarChart3, Percent, Timer, TrendingUp } from "lucide-react";
 
 export function DashboardClient() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
@@ -28,9 +23,13 @@ export function DashboardClient() {
   const [metricsNeedKey, setMetricsNeedKey] = useState(false);
   const [txns, setTxns] = useState<TransactionRecord[]>([]);
   const [metaErr, setMetaErr] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [initial, setInitial] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const refresh = useCallback(async () => {
     setMetaErr(null);
+    setRefreshing(true);
     try {
       setMetricsNeedKey(false);
       const [h, m, t] = await Promise.all([
@@ -52,12 +51,16 @@ export function DashboardClient() {
       setHealth(h);
       setMetrics(m);
       setTxns(Array.isArray(t) ? t : []);
+      setLastUpdated(new Date());
     } catch (e) {
       if (e instanceof ApiError) {
         setMetaErr(`${e.status}: ${e.body?.slice(0, 300) || e.message}`);
       } else {
         setMetaErr(e instanceof Error ? e.message : "Failed to load");
       }
+    } finally {
+      setRefreshing(false);
+      setInitial(false);
     }
   }, []);
 
@@ -67,52 +70,59 @@ export function DashboardClient() {
     return () => clearInterval(id);
   }, [refresh]);
 
+  const showSkeleton = initial && !health && !metaErr;
+
   return (
-    <div>
-      <PageHeader
-        title="Operations console"
-        description="Rolling KPIs, recent scored transactions, and a live WebSocket alert stream wired to the FastAPI plane."
+    <div className="pb-16">
+      <DashboardHero
+        health={health}
+        onRefresh={() => void refresh()}
+        refreshing={refreshing}
+        lastUpdated={lastUpdated}
       />
 
       {metaErr ? (
-        <div className="mb-6 rounded-lg border border-risk-review/30 bg-risk-review/10 px-4 py-3 text-sm text-risk-review">
-          {metaErr}
-          <span className="mt-2 block text-xs text-ink-muted">
-            Ensure the API is running and set NEXT_PUBLIC_API_BASE. If AUTH_MODE=api_key,
-            set NEXT_PUBLIC_API_KEY to match API_KEYS.
+        <div className="mb-8 rounded-2xl border border-amber-500/25 bg-amber-500/[0.08] px-5 py-4 text-sm text-amber-100">
+          <p className="font-medium text-amber-50">Could not reach the API</p>
+          <p className="mt-1 font-mono text-xs opacity-90">{metaErr}</p>
+          <p className="mt-3 text-xs leading-relaxed text-amber-200/80">
+            Run the FastAPI stack (e.g.{" "}
+            <span className="font-mono text-white/90">docker compose up</span>), then
+            set{" "}
+            <span className="font-mono text-white/90">NEXT_PUBLIC_API_BASE</span>. If{" "}
+            <span className="font-mono text-white/90">AUTH_MODE=api_key</span>, add{" "}
+            <span className="font-mono text-white/90">NEXT_PUBLIC_API_KEY</span> to{" "}
+            <span className="font-mono text-white/90">.env.local</span>.
+          </p>
+        </div>
+      ) : null}
+
+      {metricsNeedKey && !metaErr ? (
+        <div className="mb-8 flex flex-wrap items-center gap-3 rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.06] px-5 py-4 text-sm text-cyan-100">
+          <span className="rounded-md bg-cyan-400/20 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-cyan-200">
+            Tip
+          </span>
+          <span>
+            Authenticated metrics returned 401 — add{" "}
+            <span className="font-mono text-white">NEXT_PUBLIC_API_KEY</span> so KPI
+            cards and the transaction list populate for your Upwork demo recording.
           </span>
         </div>
       ) : null}
 
-      {health ? (
-        <div className="mb-2 flex flex-wrap items-center gap-3 text-xs text-ink-muted">
-          <span
-            className={
-              health.db_connected && health.model_loaded
-                ? "text-risk-ok"
-                : "text-risk-review"
-            }
-          >
-            ● {health.status}
-          </span>
-          <span>DB {health.db_connected ? "up" : "down"}</span>
-          <span>Model {health.model_loaded ? "loaded" : "missing"}</span>
-          <span className="font-mono">v{health.model_version}</span>
-          <span>Uptime {formatUptime(health.uptime_seconds)}</span>
-        </div>
-      ) : null}
-
-      <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Total predictions (window)"
-          value={metrics ? String(metrics.total_predictions) : "—"}
+          label="Predictions (window)"
+          value={metrics ? metrics.total_predictions.toLocaleString() : "—"}
           hint={
             metrics
-              ? `Window ${metrics.window_size} · ${new Date(metrics.computed_at).toLocaleTimeString()}`
+              ? `Rolling ${metrics.window_size.toLocaleString()} · ${new Date(metrics.computed_at).toLocaleTimeString()}`
               : metricsNeedKey && !metaErr
-                ? "401: set NEXT_PUBLIC_API_KEY when API auth is enabled"
+                ? "Requires API key when auth is enabled"
                 : undefined
           }
+          icon={BarChart3}
+          skeleton={showSkeleton}
         />
         <StatCard
           label="Avg fraud probability"
@@ -121,50 +131,70 @@ export function DashboardClient() {
               ? `${(metrics.avg_fraud_probability * 100).toFixed(2)}%`
               : "—"
           }
+          icon={Percent}
+          skeleton={showSkeleton}
         />
         <StatCard
           label="Avg latency"
           value={
             metrics ? `${metrics.avg_processing_time_ms.toFixed(1)} ms` : "—"
           }
+          icon={Timer}
+          skeleton={showSkeleton}
         />
         <StatCard
-          label="Fraud rate (estimate)"
+          label="Fraud rate (est.)"
           value={
             metrics
               ? `${(metrics.fraud_rate_estimate * 100).toFixed(2)}%`
               : "—"
           }
+          icon={TrendingUp}
+          skeleton={showSkeleton}
         />
       </div>
 
-      <div className="mb-8 grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <h2 className="mb-3 text-sm font-medium text-white">Decision mix</h2>
+      <div className="mb-10 grid gap-6 lg:grid-cols-5">
+        <Panel className="lg:col-span-3">
+          <PanelHeader
+            title="Decision distribution"
+            subtitle="Share of APPROVED / REVIEW / BLOCKED outcomes inside the performance tracker window — updates on the same cadence as your API metrics."
+          />
           <DecisionChart
             blocked={metrics?.blocked_count ?? 0}
             review={metrics?.review_count ?? 0}
             approved={metrics?.approved_count ?? 0}
           />
-        </div>
-        <div>
-          <h2 className="mb-3 text-sm font-medium text-white">Alerts</h2>
+        </Panel>
+        <div className="flex min-h-0 lg:col-span-2">
           <AlertFeed />
         </div>
       </div>
 
-      <div className="mb-8">
+      <div className="mb-10">
         <PredictSandbox onScored={() => void refresh()} />
       </div>
 
-      <div className="rounded-xl border border-white/8 bg-canvas-elevated/60 shadow-panel">
-        <div className="border-b border-white/8 px-5 py-4">
-          <h2 className="text-sm font-medium text-white">Recent transactions</h2>
-          <p className="text-xs text-ink-muted">GET /api/v1/transactions?limit=30</p>
-        </div>
-        <div className="p-4">
-          <TxnTable rows={txns} />
-        </div>
+      <Panel>
+        <PanelHeader
+          title="Audit trail"
+          subtitle="Recent persisted scores — ideal proof for clients that this is a full stack, not a static mock."
+        />
+        <TxnTable rows={txns} />
+      </Panel>
+
+      <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 border-t border-white/[0.06] pt-10 font-mono text-[10px] uppercase tracking-[0.25em] text-ink-faint">
+        <span>FastAPI</span>
+        <span className="text-white/20">·</span>
+        <span>Postgres</span>
+        <span className="text-white/20">·</span>
+        <span>WebSockets</span>
+        <span className="text-white/20">·</span>
+        <span>SHAP</span>
+        <span className="text-white/20">·</span>
+        <span>XGBoost</span>
+        <span className="text-white/20">·</span>
+        <span>Next.js 14</span>
       </div>
     </div>
   );

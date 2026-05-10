@@ -22,8 +22,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from app.config import get_settings
-from ml.feature_engineering import FEATURE_COLUMNS, engineer_features
+from app.config import get_settings  # noqa: E402
+from ml.feature_engineering import FEATURE_COLUMNS, engineer_features  # noqa: E402
 
 
 def main() -> None:
@@ -38,7 +38,9 @@ def main() -> None:
         sys.exit(1)
 
     df = pd.read_csv(data_path)
-    print(f"shape={df.shape} fraud_count={int(df['Class'].sum())} fraud_rate={df['Class'].mean():.4%}")
+    fc = int(df["Class"].sum())
+    fr = df["Class"].mean()
+    print(f"shape={df.shape} fraud_count={fc} fraud_rate={fr:.4%}")
 
     X_df, scaler = engineer_features(df, fit_scaler=True)
     y = df["Class"].astype(int)
@@ -46,11 +48,13 @@ def main() -> None:
 
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     for fold, (tr_idx, va_idx) in enumerate(skf.split(X, y), 1):
+        n_neg = (y.iloc[tr_idx] == 0).sum()
+        n_pos = max(1, (y.iloc[tr_idx] == 1).sum())
         clf = xgb.XGBClassifier(
             n_estimators=100,
             max_depth=6,
             learning_rate=0.05,
-            scale_pos_weight=float((y.iloc[tr_idx] == 0).sum() / max(1, (y.iloc[tr_idx] == 1).sum())),
+            scale_pos_weight=float(n_neg / n_pos),
             eval_metric="auc",
             random_state=42,
             n_jobs=-1,

@@ -63,7 +63,10 @@ async def require_client_auth(
         raise HTTPException(
             status_code=401,
             detail={
-                "message": "Authentication required. Send X-API-Key or Authorization: Bearer <key>.",
+                "message": (
+                    "Authentication required. "
+                    "Send X-API-Key or Authorization: Bearer <key>."
+                ),
             },
         )
     return token

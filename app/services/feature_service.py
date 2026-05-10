@@ -6,9 +6,9 @@ import logging
 
 import numpy as np
 import pandas as pd
+from ml.feature_engineering import engineer_features
 
 from app.models.schemas import TransactionInput
-from ml.feature_engineering import FEATURE_COLUMNS, engineer_features
 
 logger = logging.getLogger(__name__)
 

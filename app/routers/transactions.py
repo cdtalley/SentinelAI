@@ -10,6 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import Settings
+from app.db.transaction_repo import TransactionRepository
 from app.dependencies import (
     get_db,
     get_drift_detector,
@@ -18,11 +20,9 @@ from app.dependencies import (
     get_transaction_repo,
 )
 from app.models.schemas import DriftReport, PerformanceMetrics, TransactionRecord
-from app.config import Settings
-from app.db.transaction_repo import TransactionRepository
+from app.modules.auth.dependencies import require_client_auth
 from app.monitoring.drift_detector import DriftDetector
 from app.monitoring.performance_tracker import PerformanceTracker
-from app.modules.auth.dependencies import require_client_auth
 
 logger = logging.getLogger(__name__)
 
@@ -57,15 +57,15 @@ class BaselineResponse(BaseModel):
 
 @router.get("", response_model=list[TransactionRecord])
 async def list_transactions(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    transaction_repo: Annotated[
+        TransactionRepository, Depends(get_transaction_repo)
+    ],
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     decision: Annotated[
         str | None,
         Query(description="Optional filter APPROVED|REVIEW|BLOCKED"),
     ] = None,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    transaction_repo: Annotated[
-        TransactionRepository, Depends(get_transaction_repo)
-    ],
 ) -> list[TransactionRecord]:
     if decision not in (None, "APPROVED", "REVIEW", "BLOCKED"):
         raise HTTPException(

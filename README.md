@@ -335,6 +335,14 @@ ruff format app ml tests
 pytest -q
 ```
 
+**Integration tests** use `TestClient` as a **context manager** so the ASGI **lifespan** runs (singleton services wire correctly). Validation-only cases stub `require_prediction_service` so `422` responses can be asserted without local model artifacts or PostgreSQL.
+
+**Offline evaluation** (after training and with `creditcard.csv` present):
+
+```bash
+python ml/evaluate.py
+```
+
 ---
 
 ## 17. Dataset

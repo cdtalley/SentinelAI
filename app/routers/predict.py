@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.errors import persistence_error_detail
+from app.db.transaction_repo import TransactionRepository
 from app.dependencies import (
     get_alert_service,
     get_db,
@@ -20,6 +20,7 @@ from app.dependencies import (
     get_transaction_repo,
     require_prediction_service,
 )
+from app.errors import persistence_error_detail
 from app.models.schemas import (
     BatchPredictionRequest,
     BatchPredictionResponse,
@@ -27,13 +28,12 @@ from app.models.schemas import (
     TransactionInput,
     TransactionRecord,
 )
+from app.modules.auth.dependencies import require_client_auth
+from app.monitoring.performance_tracker import PerformanceTracker
 from app.services.alert_service import AlertService
 from app.services.explanation_service import ExplanationService
 from app.services.prediction_service import PredictionService
-from app.db.transaction_repo import TransactionRepository
-from app.monitoring.performance_tracker import PerformanceTracker
 from app.utils.cold_start import is_demo_cold_start
-from app.modules.auth.dependencies import require_client_auth
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,6 @@ async def predict_one(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> PredictionWithExplanation:
     is_cold = _cold_start(transaction)
-    t0 = time.perf_counter()
     result = await asyncio.to_thread(
         prediction_service.predict,
         transaction,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
@@ -41,8 +42,6 @@ async def alerts_channel(websocket: WebSocket) -> None:
         logger.debug("WebSocket loop ended: %s", exc)
     finally:
         hb.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await hb
-        except asyncio.CancelledError:
-            pass
         alert_service.disconnect(websocket)

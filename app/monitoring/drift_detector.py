@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import numpy as np
@@ -61,7 +61,7 @@ class DriftDetector:
         current_feature_data: dict[str, list[float]],
         window_size: int = 1000,
     ) -> DriftReport:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if not self.reference_distributions:
             return DriftReport(
                 checked_at=now,

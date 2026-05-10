@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 from collections import deque
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.models.schemas import PerformanceMetrics, PredictionResult
 
@@ -48,7 +48,7 @@ class PerformanceTracker:
                 avg_fraud_probability=0.0,
                 avg_processing_time_ms=0.0,
                 model_version=self._model_version,
-                computed_at=datetime.now(timezone.utc),
+                computed_at=datetime.now(UTC),
             )
         blk = sum(1 for x in preds if x["decision"] == "BLOCKED")
         rev = sum(1 for x in preds if x["decision"] == "REVIEW")
@@ -67,7 +67,7 @@ class PerformanceTracker:
             avg_fraud_probability=float(fps),
             avg_processing_time_ms=float(ms),
             model_version=self._model_version,
-            computed_at=datetime.now(timezone.utc),
+            computed_at=datetime.now(UTC),
         )
 
     def get_uptime_seconds(self) -> float:

@@ -28,17 +28,17 @@ def test_health_returns_structured_payload(client: TestClient) -> None:
     assert "uptime_seconds" in body
 
 
-def test_predict_rejects_negative_amount(client: TestClient) -> None:
+def test_predict_rejects_negative_amount(client_with_predict_stub: TestClient) -> None:
     payload = {"amount": -1.0, "time": 0.0, **_minimal_v()}
-    r = client.post("/api/v1/predict", json=payload)
+    r = client_with_predict_stub.post("/api/v1/predict", json=payload)
     assert r.status_code == 422
     err = r.json()
     assert "message" in err or "errors" in err
 
 
-def test_predict_rejects_missing_field(client: TestClient) -> None:
+def test_predict_rejects_missing_field(client_with_predict_stub: TestClient) -> None:
     payload = {"amount": 10.0, "time": 100.0, "v1": 0.0}
-    r = client.post("/api/v1/predict", json=payload)
+    r = client_with_predict_stub.post("/api/v1/predict", json=payload)
     assert r.status_code == 422
 
 

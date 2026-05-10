@@ -15,8 +15,10 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from app.config import Settings, get_settings as load_settings
+from app.config import Settings
+from app.config import get_settings as load_settings
 from app.db.database import init_db
+from app.db.transaction_repo import TransactionRepository
 from app.dependencies import wire_application
 from app.limiter import limiter
 from app.modules.logging_config import configure_logging
@@ -27,7 +29,6 @@ from app.services.alert_service import AlertService
 from app.services.explanation_service import ExplanationService
 from app.services.feature_service import FeatureService
 from app.services.prediction_service import PredictionService
-from app.db.transaction_repo import TransactionRepository
 from app.utils.model_loader import ModelLoader, ModelNotFoundError
 from app.utils.ollama_client import OllamaClient
 

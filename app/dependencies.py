@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from fastapi import HTTPException
 
-from app.config import Settings, get_settings as load_settings
+from app.config import Settings
+from app.config import get_settings as load_settings
 from app.db.database import get_db as _database_get_db
 from app.db.transaction_repo import TransactionRepository
 from app.monitoring.drift_detector import DriftDetector

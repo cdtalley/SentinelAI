@@ -67,7 +67,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
 
     DATABASE_SCHEMA_MANAGED_BY: Literal["app", "alembic"] = "app"
-    """``app``: SQLAlchemy create_all on startup. ``alembic``: run ``alembic upgrade head`` in deploy (init_db no-op)."""
+    # app: create_all on startup. alembic: migrations only (init_db no-op).
 
 @lru_cache
 def get_settings() -> Settings:

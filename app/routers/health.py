@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import Settings
 from app.dependencies import (
     get_db,
     get_performance_tracker,
@@ -21,7 +22,6 @@ from app.dependencies import (
 )
 from app.limiter import limiter
 from app.models.schemas import HealthResponse, PerformanceMetrics
-from app.config import Settings
 from app.modules.auth.dependencies import require_client_auth
 from app.monitoring.performance_tracker import PerformanceTracker
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections import deque
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import WebSocket
 
@@ -38,7 +38,7 @@ class AlertService:
     async def broadcast_alert(self, result: PredictionResult, explanation: str) -> None:
         if result.decision not in ("BLOCKED", "REVIEW"):
             return
-        ts = datetime.now(timezone.utc).isoformat()
+        ts = datetime.now(UTC).isoformat()
         top_signal = ""
         if result.top_shap_features:
             top_signal = result.top_shap_features[0].feature_name
@@ -67,7 +67,7 @@ class AlertService:
             await asyncio.gather(*(_send(ws) for ws in list(self.active_connections)))
 
     async def send_heartbeat(self) -> None:
-        utcnow = datetime.now(timezone.utc).isoformat()
+        utcnow = datetime.now(UTC).isoformat()
         msg = {"type": "heartbeat", "timestamp": utcnow}
 
         async def _send(ws: WebSocket) -> None:

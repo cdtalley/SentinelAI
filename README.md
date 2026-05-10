@@ -315,8 +315,16 @@ Environment:
 
 | File | What it is |
 |------|------------|
+| **`upwork-thumbnail.png`** | **1200×630** Upwork / catalog hero (readable as a small thumbnail). |
 | **`upwork-dashboard.png`** | Full-page Streamlit ops dashboard (charts + audit trail). |
 | **`next-console-dashboard.png`** | Next.js `/dashboard` (when capture script finds a dev server). |
+
+**Elite preview (no Docker)** — regenerates the dashboard PNG with curated demo telemetry + hidden Streamlit chrome:
+
+```bash
+python scripts/capture_elite_dashboard_png.py
+python scripts/capture_upwork_thumbnail.py
+```
 
 **Recommended (one command)** — waits for API health, seeds live `/predict` traffic, starts Streamlit headlessly, captures **1920×** PNGs:
 

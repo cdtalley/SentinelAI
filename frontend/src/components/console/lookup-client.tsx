@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { Search, Loader2 } from "lucide-react";
 import { ApiError, api, type TransactionRecord } from "@/lib/api";
-import { PageHeader } from "./page-header";
+import { Panel, PanelHeader } from "./panel";
 import { TxnTable } from "./txn-table";
+import { cn } from "@/lib/utils";
 
 export function LookupClient() {
   const [id, setId] = useState("");
@@ -34,53 +35,74 @@ export function LookupClient() {
   }
 
   return (
-    <div>
-      <PageHeader
-        title="Transaction lookup"
-        description="GET /api/v1/predict/{transaction_id} — persisted audit trail from Postgres."
-      />
-      <form
-        onSubmit={(e) => void submit(e)}
-        className="mb-8 flex max-w-xl flex-col gap-3 sm:flex-row sm:items-end"
-      >
-        <label className="flex-1 text-xs text-ink-muted">
-          <span className="mb-1 block font-mono uppercase tracking-wider text-ink-faint">
-            transaction_id
-          </span>
-          <input
-            value={id}
-            onChange={(e) => setId(e.target.value)}
-            placeholder="uuid from a prior score"
-            className="w-full rounded-lg border border-white/10 bg-canvas-elevated px-3 py-2.5 font-mono text-sm text-white outline-none ring-accent/30 focus:ring-2"
-          />
-        </label>
-        <button
-          type="submit"
-          disabled={loading || !id.trim()}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-canvas transition hover:bg-cyan-300 disabled:opacity-40"
+    <div className="space-y-8">
+      <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-canvas-elevated/70 p-6 sm:p-8">
+        <div className="pointer-events-none absolute -right-16 top-0 h-40 w-40 rounded-full bg-accent/10 blur-3xl" />
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-accent">
+          Audit retrieval
+        </p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+          Transaction lookup
+        </h1>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-muted">
+          <span className="font-mono text-accent/90">GET /api/v1/predict/{"{id}"}</span> —
+          returns the persisted scoring row clients would use for chargeback investigations.
+        </p>
+      </div>
+
+      <Panel>
+        <PanelHeader
+          title="Query"
+          subtitle="Paste a transaction_id emitted by the scoring sandbox or your own ingest pipeline."
+        />
+        <form
+          onSubmit={(e) => void submit(e)}
+          className="flex max-w-2xl flex-col gap-4 sm:flex-row sm:items-end"
         >
-          {loading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Search className="h-4 w-4" />
-          )}
-          Lookup
-        </button>
-      </form>
-      {err ? (
-        <pre className="mb-6 overflow-x-auto rounded-lg bg-risk-block/10 p-4 font-mono text-xs text-risk-block">
-          {err}
-        </pre>
-      ) : null}
+          <label className="min-w-0 flex-1 text-xs text-ink-muted">
+            <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-wider text-ink-faint">
+              transaction_id
+            </span>
+            <input
+              value={id}
+              onChange={(e) => setId(e.target.value)}
+              placeholder="e.g. uuid from dashboard table"
+              className="w-full rounded-xl border border-white/10 bg-canvas/80 px-4 py-3 font-mono text-sm text-white outline-none ring-accent/25 focus:ring-2"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={loading || !id.trim()}
+            className={cn(
+              "inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-canvas shadow-glow transition",
+              "hover:bg-cyan-300 disabled:opacity-40"
+            )}
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Search className="h-4 w-4" />
+            )}
+            Lookup
+          </button>
+        </form>
+        {err ? (
+          <pre className="mt-6 overflow-x-auto rounded-xl border border-rose-500/25 bg-rose-500/10 p-4 font-mono text-xs text-rose-100">
+            {err}
+          </pre>
+        ) : null}
+      </Panel>
+
       {row ? (
-        <div className="rounded-xl border border-white/8 bg-canvas-elevated/60 p-4 shadow-panel">
+        <Panel>
+          <PanelHeader title="Result" subtitle="Persisted explanation and structured fields." />
           <TxnTable rows={[row]} />
           {row.explanation ? (
-            <div className="mt-4 rounded-lg border border-white/6 bg-canvas/50 p-4 text-sm leading-relaxed text-ink-muted">
+            <div className="mt-6 rounded-xl border border-white/[0.06] bg-canvas/50 p-5 text-sm leading-relaxed text-ink-muted">
               {row.explanation}
             </div>
           ) : null}
-        </div>
+        </Panel>
       ) : null}
     </div>
   );

@@ -322,6 +322,34 @@ python scripts/capture_dashboard_screenshot.py --url http://127.0.0.1:8501 --wai
 
 Optional `--out` path; default writes `docs/screenshots/upwork-dashboard.png`.
 
+### 14.1 Next.js catalog console (portfolio / Upwork)
+
+The **`frontend/`** app is a production-style ops console: **`/dashboard`** (KPIs, decision mix, WebSocket incident stream, scoring sandbox with SHAP), **`/lookup`**, **`/model-health`**. It ships Open Graph metadata and a **`docker compose`** service so the full stack can run together.
+
+**Local dev (best for screen recordings):** bring up API + Postgres, then:
+
+```bash
+cd frontend
+cp .env.example .env.local   # adjust NEXT_PUBLIC_API_BASE / API_KEY if needed
+npm install
+npm run dev:catalog
+```
+
+Open **`http://localhost:3010`** (port **3010** avoids common conflicts with other tools on **3000**).
+
+**Docker (API + DB + console):** from the repo root:
+
+```bash
+docker compose up -d --build
+```
+
+| Service | URL |
+|---------|-----|
+| OpenAPI / docs | `http://localhost:8000/docs` |
+| Next.js console | `http://localhost:3010` |
+
+The browser calls the API at **`http://localhost:8000`**; keep that port published. For a public catalog link, set **`NEXT_PUBLIC_SITE_URL`** in `.env.local` (or build args) so social previews resolve.
+
 ---
 
 ## 15. Horizontal scaling and known limitations

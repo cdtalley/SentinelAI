@@ -69,6 +69,12 @@ export function MarketingHero() {
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
+              href="/dashboard#score-sandbox"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-5 py-2.5 text-sm text-ink transition hover:border-accent/40 hover:text-white"
+            >
+              Record demo (sandbox)
+            </Link>
+            <Link
               href="/model-health"
               className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-5 py-2.5 text-sm text-ink transition hover:border-accent/40 hover:text-white"
             >

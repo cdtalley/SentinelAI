@@ -60,7 +60,10 @@ export function PredictSandbox({ onScored }: { onScored?: () => void }) {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-violet-500/[0.07] via-transparent to-accent/[0.06] p-6 sm:p-8">
+    <div
+      id="score-sandbox"
+      className="relative scroll-mt-24 overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-violet-500/[0.07] via-transparent to-accent/[0.06] p-6 sm:p-8"
+    >
       <div className="pointer-events-none absolute -right-20 top-0 h-40 w-40 rounded-full bg-accent/10 blur-3xl" />
       <div className="relative grid gap-8 lg:grid-cols-2 lg:gap-10">
         <div>

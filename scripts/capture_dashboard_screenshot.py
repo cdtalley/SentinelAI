@@ -29,6 +29,10 @@ def main() -> None:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page(viewport={"width": 1600, "height": 900})
         page.goto(args.url, wait_until="domcontentloaded", timeout=120_000)
+        try:
+            page.wait_for_selector('[data-testid="stApp"]', timeout=60_000)
+        except Exception:
+            pass
         page.wait_for_timeout(args.wait_ms)
         page.screenshot(path=str(args.out), full_page=True)
         browser.close()

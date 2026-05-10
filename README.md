@@ -298,19 +298,29 @@ python ml/train.py
 streamlit run dashboard/app.py
 ```
 
+Headless bind (for CI or background capture):
+
+```bash
+streamlit run dashboard/app.py --server.port 8501 --server.address 127.0.0.1 --server.headless true
+```
+
+Then open **`http://127.0.0.1:8501`** in a browser. With the FastAPI service and Postgres up, metrics and charts populate from the live API; without them, the UI still renders and shows explicit empty states (useful for layout / portfolio shots).
+
 Environment:
 
 - `SENTINEL_API_BASE` — default `http://127.0.0.1:8000/api/v1`
 - `SENTINEL_API_KEY` — when the API runs with `AUTH_MODE=api_key`
 
-Optional screenshot capture (Playwright):
+**Upwork / marketing asset:** a full-page capture is stored at **`docs/screenshots/upwork-dashboard.png`**. Regenerate anytime:
 
 ```bash
 pip install playwright && python -m playwright install chromium
-streamlit run dashboard/app.py --server.port 8501
-# second shell:
-python scripts/capture_dashboard_screenshot.py --url http://127.0.0.1:8501
+streamlit run dashboard/app.py --server.port 8501 --server.address 127.0.0.1 --server.headless true
+# second shell, after the app responds on port 8501:
+python scripts/capture_dashboard_screenshot.py --url http://127.0.0.1:8501 --wait-ms 12000
 ```
+
+Optional `--out` path; default writes `docs/screenshots/upwork-dashboard.png`.
 
 ---
 

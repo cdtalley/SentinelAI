@@ -180,9 +180,29 @@ def main() -> None:
             )
             st.plotly_chart(fig2, use_container_width=True)
         else:
-            st.info("No transactions in DB — start the API and stream simulator.")
+            st.info(
+                "No transactions in DB — start API + Postgres, then run "
+                "`python scripts/seed_demo_traffic.py` before capturing screenshots."
+            )
 
-    st.subheader("Flagged queue (latest)")
+    st.subheader("Recent audit trail (latest scores)")
+    audit = fetch_transactions(50, None)
+    if audit:
+        adf = pd.DataFrame(audit)[
+            [
+                "transaction_id",
+                "amount",
+                "decision",
+                "fraud_probability",
+                "model_used",
+                "predicted_at",
+            ]
+        ]
+        st.dataframe(adf, use_container_width=True, hide_index=True)
+    else:
+        st.caption("No rows yet — seed demo traffic to populate this table for portfolio shots.")
+
+    st.subheader("High-risk queue (BLOCKED / REVIEW)")
     flagged = fetch_transactions(25, "BLOCKED") + fetch_transactions(25, "REVIEW")
     flagged.sort(key=lambda x: x.get("predicted_at", ""), reverse=True)
     flagged = flagged[:40]
@@ -192,7 +212,10 @@ def main() -> None:
         ]
         st.dataframe(show, use_container_width=True, hide_index=True)
     else:
-        st.caption("No BLOCKED/REVIEW rows to show.")
+        st.caption(
+            "No BLOCKED/REVIEW rows yet — some models approve most demo vectors; "
+            "the audit trail above still proves live scoring."
+        )
 
     st.caption(
         f"Dashboard UTC {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} · "

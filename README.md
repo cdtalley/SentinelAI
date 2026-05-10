@@ -311,16 +311,17 @@ Environment:
 - `SENTINEL_API_BASE` — default `http://127.0.0.1:8000/api/v1`
 - `SENTINEL_API_KEY` — when the API runs with `AUTH_MODE=api_key`
 
-**Upwork / marketing asset:** a full-page capture is stored at **`docs/screenshots/upwork-dashboard.png`**. Regenerate anytime:
+**Upwork / marketing asset:** a full-page capture is stored at **`docs/screenshots/upwork-dashboard.png`**. For a shot that shows **live metrics, charts, and scored rows**, seed the API first (requires Postgres + loaded models):
 
 ```bash
+docker compose up -d   # or your usual API + DB stack
 pip install playwright && python -m playwright install chromium
 streamlit run dashboard/app.py --server.port 8501 --server.address 127.0.0.1 --server.headless true
-# second shell, after the app responds on port 8501:
-python scripts/capture_dashboard_screenshot.py --url http://127.0.0.1:8501 --wait-ms 12000
+# second shell, after Streamlit responds on 8501:
+python scripts/capture_dashboard_screenshot.py --url http://127.0.0.1:8501 --wait-ms 15000 --seed-first
 ```
 
-Optional `--out` path; default writes `docs/screenshots/upwork-dashboard.png`.
+`--seed-first` runs **`scripts/seed_demo_traffic.py`** against the live API so metrics, charts, and the **Recent audit trail** table show real scored rows. You can also run `python scripts/seed_demo_traffic.py` manually once, then capture without the flag. Optional `--out` path; default writes `docs/screenshots/upwork-dashboard.png`.
 
 ### 14.1 Next.js catalog console (portfolio / Upwork)
 
